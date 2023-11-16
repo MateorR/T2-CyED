@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0"
+            prefWidth="800.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="ui.BombermanGame">
+   <HBox alignment="TOP_CENTER" layoutX="39.0" layoutY="35.0" prefHeight="27.0" prefWidth="522.0"
+         style="-fx-spacing: 100;">
+      <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TIME " wrappingWidth="54.13671875"/>
+      <Text strokeType="OUTSIDE" strokeWidth="0.0" text="157300" wrappingWidth="54.13671875"/>
+      <Text strokeType="OUTSIDE" strokeWidth="0.0" text="LEFT" wrappingWidth="54.13671875"/>
+   </HBox>
+   <Canvas fx:id="canvas" focusTraversable="true" height="313.0" layoutX="39.0" layoutY="62.0" width="522.0"/>
+</AnchorPane>
