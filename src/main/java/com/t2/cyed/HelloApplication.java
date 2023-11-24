@@ -1,4 +1,4 @@
-package com.example.t2cyed;
+package com.t2.cyed;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
