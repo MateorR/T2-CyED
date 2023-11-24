@@ -1,4 +1,4 @@
-package com.example.t2cyed;
+package com.t2.cyed;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
