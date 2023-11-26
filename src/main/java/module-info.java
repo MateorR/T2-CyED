@@ -10,6 +10,6 @@ module ui {
   exports com.t2.cyed.model;
   exports com.t2.cyed;
 
-  opens util to javafx.fxml;
-  exports util;
+  opens com.t2.cyed.util to javafx.fxml;
+  exports com.t2.cyed.util;
 }

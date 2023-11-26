@@ -1,4 +1,4 @@
-package util;
+package com.t2.cyed.util;
 
 public class Vertex <K extends Comparable<K>,V>{
   private int discoveryTime;

@@ -1,4 +1,4 @@
-package util;
+package com.t2.cyed.util;
 
 public class UnionFind {
   private final int[] dad;

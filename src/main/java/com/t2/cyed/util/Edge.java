@@ -1,4 +1,4 @@
-package util;
+package com.t2.cyed.util;
 
 public class Edge <K extends Comparable<K>,V>{
   private Vertex<K, V> start;

@@ -1,4 +1,4 @@
-package util;
+package com.t2.cyed.util;
 
 import java.util.LinkedList;
 

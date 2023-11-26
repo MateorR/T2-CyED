@@ -1,4 +1,4 @@
-package util;
+package com.t2.cyed.util;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -209,10 +209,6 @@ public class GraphAdjacentMatrix<K extends Comparable<K>, V> extends Graph<K, V>
     return vertices.get(key);
   }
 
-  public HashMap<K, Vertex<K, V>> getVertices() {
-    return vertices;
-  }
-
   private void addEdgesToMinHeap(K key, PriorityQueue<Edge<K, V>> minHeap) {
     int index = indexVertex(key);
     for (int i = 0; i < matriz.length; i++) {
@@ -241,7 +237,7 @@ public class GraphAdjacentMatrix<K extends Comparable<K>, V> extends Graph<K, V>
     PriorityQueue<Edge<K, V>> minHeap = new PriorityQueue<>(Comparator.comparingInt(Edge::getWeight));
     ArrayList<Edge<K, V>> minimumSpanningTree = new ArrayList<>();
 
-    K startVertex = vertices.keySet().iterator().next(); // Comenzar desde un vértice arbitrario
+    K startVertex = vertices.keySet().iterator().next();
 
     visited.add(startVertex);
     addEdgesToMinHeap(startVertex, minHeap);

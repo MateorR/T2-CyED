@@ -1,4 +1,4 @@
-package util;
+package com.t2.cyed.util;
 
 import java.util.stream.Collectors;
 import java.util.*;
@@ -180,30 +180,7 @@ public class GraphAdjacentList<K extends Comparable<K>, V> extends Graph<K, V> {
     if (vertices.get(keyVertexSource) == null) {
       return null;
     }
-    for (VertexAdjacentList<K, V> vertex : vertices.values()) {
-      if (vertex.getKey().compareTo(keyVertexSource) != 0)
-        vertex.setDistance(INFINITE);
-      vertex.setPredecessor(null);
-    }
-
-    PriorityQueue<VertexAdjacentList<K, V>> priority = new PriorityQueue<>(Comparator.comparingInt(Vertex::getDistance));
-    for (VertexAdjacentList<K, V> vertex : vertices.values()) {
-      priority.offer(vertex);
-    }
-    while (!priority.isEmpty()) {
-      VertexAdjacentList<K, V> vertex = priority.poll();
-      LinkedList<Edge<K, V>> edges = vertex.getEdges();
-      for (Edge<K, V> edge : edges) {
-        VertexAdjacentList<K, V> vertex2 = (VertexAdjacentList<K, V>) edge.getDestination();
-        int weight = edge.getWeight() + vertex.getDistance();
-        if (weight < vertex2.getDistance()) {
-          priority.remove(vertex2);
-          vertex2.setDistance(weight);
-          vertex2.setPredecessor(vertex);
-          priority.offer(vertex2);
-        }
-      }
-    }
+    calculateNodes(keyVertexSource);
     return vertices.values().stream().map(Vertex::getDistance).collect(Collectors.toCollection(ArrayList::new));
   }
 
@@ -214,6 +191,23 @@ public class GraphAdjacentList<K extends Comparable<K>, V> extends Graph<K, V> {
       return null;
     }
 
+    calculateNodes(startNode);
+
+    ArrayList<Integer> shortestPath = new ArrayList<>();
+    VertexAdjacentList<K, V> currentNode = vertices.get(endNode);
+    while (currentNode != null) {
+      shortestPath.add((Integer) currentNode.getKey());
+      if(currentNode.getKey().equals(startNode)) {
+        break;
+      }
+      currentNode = (VertexAdjacentList<K, V>) currentNode.getPredecessor();
+    }
+    Collections.reverse(shortestPath);
+
+    return shortestPath;
+  }
+
+  private void calculateNodes(K startNode) {
     for (VertexAdjacentList<K, V> vertex : vertices.values()) {
       if (vertex.getKey().compareTo(startNode) != 0)
         vertex.setDistance(INFINITE);
@@ -240,19 +234,6 @@ public class GraphAdjacentList<K extends Comparable<K>, V> extends Graph<K, V> {
         }
       }
     }
-
-    ArrayList<Integer> shortestPath = new ArrayList<>();
-    VertexAdjacentList<K, V> currentNode = vertices.get(endNode);
-    while (currentNode != null) {
-      shortestPath.add((Integer) currentNode.getKey());
-      if(currentNode.getKey().equals(startNode)) {
-        break;
-      }
-      currentNode = (VertexAdjacentList<K, V>) currentNode.getPredecessor();
-    }
-    Collections.reverse(shortestPath);
-
-    return shortestPath;
   }
 
   @Override
@@ -273,58 +254,6 @@ public class GraphAdjacentList<K extends Comparable<K>, V> extends Graph<K, V> {
 
   public Vertex<K, V> getVertex(K key) {
     return vertices.get(key);
-  }
-
-  public HashMap<K, VertexAdjacentList<K, V>> getVertices() {
-    return vertices;
-  }
-
-  private void addEdgesToMinHeap(K key, PriorityQueue<Edge<K, V>> minHeap) {
-    VertexAdjacentList<K, V> vertex = vertices.get(key);
-    for (Edge<K, V> edge : vertex.getEdges()) {
-      K neighborKey = edge.getDestination().getKey();
-      int weight = edge.getWeight();
-      if (!minHeap.contains(new Edge<>(vertex, vertices.get(neighborKey), weight))) {
-        minHeap.add(new Edge<>(vertex, vertices.get(neighborKey), weight));
-      }
-    }
-  }
-
-  public ArrayList<ArrayList<Integer>> floydWarshall() {
-    int size = numberVertexCurrent;
-    ArrayList<ArrayList<Integer>> dist = new ArrayList<>();
-
-    for (int i = 0; i < size; i++) {
-      ArrayList<Integer> row = new ArrayList<>();
-      for (int j = 0; j < size; j++) {
-        if (i == j) {
-          row.add(0);
-        } else {
-          row.add(INFINITE);
-        }
-      }
-      dist.add(row);
-    }
-
-    for (Edge<K, V> edge : edges) {
-      int fromIndex = verticesIndex(edge.getStart().getKey());
-      int toIndex = verticesIndex(edge.getDestination().getKey());
-      dist.get(fromIndex).set(toIndex, edge.getWeight());
-    }
-
-    for (int k = 0; k < size; k++) {
-      for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
-          int directPath = dist.get(i).get(j);
-          int throughK = dist.get(i).get(k) + dist.get(k).get(j);
-          if (throughK < directPath) {
-            dist.get(i).set(j, throughK);
-          }
-        }
-      }
-    }
-
-    return dist;
   }
 
   public String toString() {

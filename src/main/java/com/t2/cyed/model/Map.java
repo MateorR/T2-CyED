@@ -1,19 +1,15 @@
 package com.t2.cyed.model;
 
-import com.t2.cyed.ElectionsApp;
-import com.t2.cyed.controller.Game;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.paint.Color;
-import util.GraphAdjacentMatrix;
+import com.t2.cyed.util.GraphAdjacentMatrix;
 import javafx.scene.shape.Line;
-import util.GraphAdjacentList;
+import com.t2.cyed.util.GraphAdjacentList;
 import javafx.scene.Cursor;
-import util.GraphType;
-import util.Graphable;
+import com.t2.cyed.util.GraphType;
+import com.t2.cyed.util.Graphable;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -25,9 +21,9 @@ public class Map {
 
   public Map(Implementation implementationEnum) {
     if (implementationEnum == Implementation.ADJACENCY_LIST) {
-      map = new GraphAdjacentList<>(GraphType.DIRECTED);
+      map = new GraphAdjacentList<>(GraphType.SIMPLE);
     } else {
-      map = new GraphAdjacentMatrix<>(50, GraphType.DIRECTED);
+      map = new GraphAdjacentMatrix<>(50, GraphType.SIMPLE);
     }
     radioButtons = new HashMap<>();
     lines = new HashMap<>();

@@ -1,6 +1,5 @@
-package util;
+package com.t2.cyed.util;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 

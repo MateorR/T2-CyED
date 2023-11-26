@@ -13,7 +13,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
-import util.*;
+import com.t2.cyed.util.*;
 
 
 import java.net.URL;
@@ -31,7 +31,7 @@ public class Game implements Initializable {
   @FXML
   private AnchorPane mainScreen;
 
-  private int convencedPoints = 100;
+  private int convencedPoints = 200;
 
   @FXML
   private Label armyLabel;
@@ -50,8 +50,8 @@ public class Game implements Initializable {
 
   @Override
   public void initialize(URL location, ResourceBundle resources) {
-    armyLabel.setText("PODER DE CONVENCIMIENTO DISPONIBLE: " + convencedPoints);
-    difficultyLabel.setText("DIFICULTAD DEL PUEBLO: ");
+    armyLabel.setText("CONVENCIMIENTO: " + convencedPoints);
+    difficultyLabel.setText("RESISTENCIA DEL PUEBLO: ");
   }
 
   public void setImplementation(Implementation implementationEnum) {
@@ -69,10 +69,10 @@ public class Game implements Initializable {
       int[] selected = selectedAction();
       int difficulty = validateDirectionOfEdge(selected[0], searchCity(selected[1]));
       convencedPoints -= difficulty;
-      armyLabel.setText("PODER DE CONVENCIMIENTO DISPONIBLE: " + convencedPoints);
+      armyLabel.setText("CONVENCIMIENTO: " + convencedPoints);
       validateUsedPower();
       if (convencedPoints < 0.1) {
-        armyLabel.setText("PODER DE CONVENCIMIENTO DISPONIBLE: " + 0);
+        armyLabel.setText("CONVENCIMIENTO: " + 0);
         surrenderAction();
       }
     }
@@ -84,9 +84,7 @@ public class Game implements Initializable {
       for (int i = 0; i < radioButtons.size(); i++) {
         if (radioButtons.get(i).isSelected() && !radioButtons.get(i).isDisable()) {
           for (int j = 0; j < radioButtonsConquered.size(); j++) {
-            if (searchCity(j) == -1 && j < radioButtonsConquered.size() - 1) {
-
-            } else if (validateDirectionOfEdge(i, searchCity(j)) == -1 && j == radioButtonsConquered.size() - 1) {
+            if (validateDirectionOfEdge(i, searchCity(j)) == -1 && j == radioButtonsConquered.size() - 1) {
               Alert alert = new Alert(Alert.AlertType.ERROR);
               alert.setTitle("Error en consulta");
               alert.setHeaderText(null);
@@ -94,7 +92,7 @@ public class Game implements Initializable {
               alert.showAndWait();
               break;
             } else if (validateDirectionOfEdge(i, searchCity(j)) != -1) {
-              difficultyLabel.setText("DIFICULTAD DEL PUEBLO: " + validateDirectionOfEdge(i, searchCity(j)));
+              difficultyLabel.setText("ABSTINENCIA DEL PUEBLO: " + validateDirectionOfEdge(i, searchCity(j)));
               break;
             }
           }
@@ -117,13 +115,16 @@ public class Game implements Initializable {
 
   public void dijkstraAction() {
     helpMethod2 = true;
-
     try {
       ArrayList<Integer> distances = map.getGraph().dijkstra(0);
-      System.out.println(distances);
       for (int i = 0; i < distances.size(); i++) {
         radioButtons.get(i).setText(String.valueOf(distances.get(i)));
       }
+      ArrayList<Integer> path = map.getGraph().shortestPath(0, 49);
+      for (Integer integer : path) {
+        radioButtons.get(integer).setStyle("-fx-background-color: #0b41f1;");
+      }
+      convencedPoints -= 30;
     } catch (UnsupportedOperationException e) {
       e.printStackTrace();
     }
@@ -148,6 +149,7 @@ public class Game implements Initializable {
 
         count++;
       }
+      convencedPoints -= 10;
     } catch (UnsupportedOperationException e) {
       e.printStackTrace();
     }
@@ -179,7 +181,7 @@ public class Game implements Initializable {
             alert.showAndWait();
           } else if (validateDirectionOfEdge(i, searchCity(j)) != -1) {
             radioButtons.get(i).setDisable(true);
-            radioButtons.get(i).setStyle("-fx-background-color: #FF0000;");
+            radioButtons.get(i).setStyle("-fx-background-color: BLUE;");
             selected[0] = i;
             selected[1] = j;
             return selected;
@@ -208,16 +210,16 @@ public class Game implements Initializable {
     }
     if (count == 0) {
       Alert alert = new Alert(Alert.AlertType.ERROR);
-      alert.setTitle("Error en ataque");
+      alert.setTitle("Ups selecciona un pueblo");
       alert.setHeaderText(null);
-      alert.setContentText("Por favor selecciona un pueblo para atacar");
+      alert.setContentText("Por favor selecciona un pueblo para convencer");
       alert.showAndWait();
       return false;
     } else if (count > 1) {
       Alert alert = new Alert(Alert.AlertType.ERROR);
-      alert.setTitle("Error en ataque");
+      alert.setTitle("Ups solo puedes seleccionar un pueblo");
       alert.setHeaderText(null);
-      alert.setContentText("Por favor selecciona solo un pueblo para atacar");
+      alert.setContentText("Por favor selecciona solo un pueblo para convecer");
       alert.showAndWait();
       return false;
     }
