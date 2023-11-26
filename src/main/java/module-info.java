@@ -1,8 +1,15 @@
-module com.example.t2cyed {
-    requires javafx.controls;
-    requires javafx.fxml;
+module ui {
+  requires javafx.controls;
+  requires javafx.fxml;
+  requires java.desktop;
 
+  opens com.t2.cyed to javafx.fxml;
+  opens com.t2.cyed.controller to javafx.fxml;
+  opens com.t2.cyed.model to javafx.fxml;
+  exports com.t2.cyed.controller;
+  exports com.t2.cyed.model;
+  exports com.t2.cyed;
 
-    opens com.example.t2cyed to javafx.fxml;
-    exports com.example.t2cyed;
+  opens com.t2.cyed.util to javafx.fxml;
+  exports com.t2.cyed.util;
 }
