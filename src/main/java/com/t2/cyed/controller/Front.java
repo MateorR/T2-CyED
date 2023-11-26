@@ -9,12 +9,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.RadioButton;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Objects;
 
 
@@ -26,13 +24,13 @@ public class Front {
   private Button buttonPlay;
 
   @FXML
-  protected void onStartButtonClick() throws IOException {
+  protected void onStartButtonClick() {
     String implementation = graphComboBox.getValue();
     if (implementation == null || implementation.isEmpty()) {
       Alert alert = new Alert(Alert.AlertType.ERROR);
-      alert.setTitle("Error por implementacion");
+      alert.setTitle("Error por implementación");
       alert.setHeaderText(null);
-      alert.setContentText("Debes escoger una implementacion para el grafo!");
+      alert.setContentText("Debes escoger una implementación para el grafo!");
       alert.showAndWait();
       return;
     }

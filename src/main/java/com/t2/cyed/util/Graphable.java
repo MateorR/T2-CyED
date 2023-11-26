@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 public interface Graphable<K extends Comparable<K>,V> {
-    public void addVertex(K key, V value);
-    public void addEdge(K origin, K end, int weight);
+    public boolean addVertex(K key, V value);
+    public boolean addEdge(K origin, K end, int weight);
 
     public void bfs(K origin);
 

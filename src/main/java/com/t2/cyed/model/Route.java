@@ -1,9 +1,9 @@
 package com.t2.cyed.model;
 
 public class Route {
-  private int cityA;
-  private int cityB;
-  private int difficulty;
+  private final int cityA;
+  private final int cityB;
+  private final int difficulty;
 
   public Route(int cityA, int cityB, int difficulty) {
     this.cityA = cityA;
@@ -15,23 +15,12 @@ public class Route {
     return cityA;
   }
 
-  public void setCityA(int cityA) {
-    this.cityA = cityA;
-  }
-
   public int getCityB() {
     return cityB;
-  }
-
-  public void setCityB(int cityB) {
-    this.cityB = cityB;
   }
 
   public int getDifficulty() {
     return difficulty;
   }
 
-  public void setDifficulty(int difficulty) {
-    this.difficulty = difficulty;
-  }
 }

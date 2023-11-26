@@ -45,9 +45,6 @@ public class Game implements Initializable {
 
   private LinkedList<Edge<Integer, Votation>> routes;
 
-  public void GameController() {
-  }
-
   @Override
   public void initialize(URL location, ResourceBundle resources) {
     armyLabel.setText("CONVENCIMIENTO: " + convencedPoints);
@@ -88,7 +85,7 @@ public class Game implements Initializable {
               Alert alert = new Alert(Alert.AlertType.ERROR);
               alert.setTitle("Error en consulta");
               alert.setHeaderText(null);
-              alert.setContentText("No tienes ningun pueblo convencido cercano a este");
+              alert.setContentText("No tienes ningún pueblo convencido cercano a este");
               alert.showAndWait();
               break;
             } else if (validateDirectionOfEdge(i, searchCity(j)) != -1) {
@@ -115,50 +112,43 @@ public class Game implements Initializable {
 
   public void dijkstraAction() {
     helpMethod2 = true;
-    try {
-      ArrayList<Integer> distances = map.getGraph().dijkstra(0);
-      for (int i = 0; i < distances.size(); i++) {
-        radioButtons.get(i).setText(String.valueOf(distances.get(i)));
-      }
-      ArrayList<Integer> path = map.getGraph().shortestPath(0, 49);
-      for (Integer integer : path) {
-        radioButtons.get(integer).setStyle("-fx-background-color: #0b41f1;");
-      }
-      convencedPoints -= 30;
-    } catch (UnsupportedOperationException e) {
-      e.printStackTrace();
+    ArrayList<Integer> distances = map.getGraph().dijkstra(0);
+    for (int i = 0; i < distances.size(); i++) {
+      radioButtons.get(i).setText(String.valueOf(distances.get(i)));
     }
+    ArrayList<Integer> path = map.getGraph().shortestPath(0, 49);
+    for (Integer integer : path) {
+      radioButtons.get(integer).setStyle("-fx-background-color: #0b41f1;");
+    }
+    convencedPoints -= 30;
+
   }
 
   public void kruskalAction() {
     helpMethod1 = true;
-    try {
-      ArrayList<Edge<Integer, Votation>> minimumSpanningTree = map.getGraph().kruskal();
-      HashMap<Integer, Line> lines = map.getLines();
+    ArrayList<Edge<Integer, Votation>> minimumSpanningTree = map.getGraph().kruskal();
+    HashMap<Integer, Line> lines = map.getLines();
 
-      int count = 0;
-      for (Edge<Integer, Votation> edge : minimumSpanningTree) {
-        if (count >= 10) break;
+    int count = 0;
+    for (Edge<Integer, Votation> edge : minimumSpanningTree) {
+      if (count >= 10) break;
 
-        int startNode = edge.getStart().getKey();
-        int endNode = edge.getDestination().getKey();
+      int startNode = edge.getStart().getKey();
+      int endNode = edge.getDestination().getKey();
 
-        Line line = lines.get(startNode + endNode);
-        line.setStroke(Color.BLUE);
-        line.setStrokeWidth(3);
+      Line line = lines.get(startNode + endNode);
+      line.setStroke(Color.BLUE);
+      line.setStrokeWidth(3);
 
-        count++;
-      }
-      convencedPoints -= 10;
-    } catch (UnsupportedOperationException e) {
-      e.printStackTrace();
+      count++;
     }
+    convencedPoints -= 10;
   }
 
   public int validateDirectionOfEdge(int city1, int city2) {
     int[] checkDirections = new int[2];
-    checkDirections[0] = searchRoute(map.getGraph().getVertex(city1).getValue(), (Votation) map.getGraph().getVertex(city2).getValue());
-    checkDirections[1] = searchRoute(map.getGraph().getVertex(city2).getValue(), (Votation) map.getGraph().getVertex(city1).getValue());
+    checkDirections[0] = searchRoute(map.getGraph().getVertex(city1).getValue(), map.getGraph().getVertex(city2).getValue());
+    checkDirections[1] = searchRoute(map.getGraph().getVertex(city2).getValue(), map.getGraph().getVertex(city1).getValue());
     if (checkDirections[0] != -1) {
       return checkDirections[0];
     } else if (checkDirections[1] != -1) {
@@ -177,7 +167,7 @@ public class Game implements Initializable {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error en ataque");
             alert.setHeaderText(null);
-            alert.setContentText("No hay ruta disponible porque no tienes ningun pueblo conquistado cercano a este");
+            alert.setContentText("No hay ruta disponible porque no tienes ningún pueblo conquistado cercano a este");
             alert.showAndWait();
           } else if (validateDirectionOfEdge(i, searchCity(j)) != -1) {
             radioButtons.get(i).setDisable(true);
@@ -219,7 +209,7 @@ public class Game implements Initializable {
       Alert alert = new Alert(Alert.AlertType.ERROR);
       alert.setTitle("Ups solo puedes seleccionar un pueblo");
       alert.setHeaderText(null);
-      alert.setContentText("Por favor selecciona solo un pueblo para convecer");
+      alert.setContentText("Por favor selecciona solo un pueblo para convencer");
       alert.showAndWait();
       return false;
     }
@@ -265,7 +255,7 @@ public class Game implements Initializable {
       } else if (helpMethod2) {
         score -= 200;
       }
-      alert.setContentText("FELICIDADES MILEI HAS GANADO LAS ELECCIONES!! \n Tu puntaje final ha sido de: " + score + " puntos \n por tu " + convencedPoints + " poder de convencimiento restante y " + villages + " pueblos convencidos");
+      alert.setContentText("FELICIDADES MILEI HAS GANADO LAS ELECCIONES!! \n Tu puntaje final ha sido de: " + score + " Puntos \n por tus " + convencedPoints + " puntos de convencimiento y " + villages + " pueblos convencidos");
       Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
       stage.getIcons().add(new Image("file:" + (Objects.requireNonNull(ElectionsApp.class.getResource("flag.jpg"))).getPath()));
 

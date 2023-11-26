@@ -1,21 +1,17 @@
 package com.t2.cyed.util;
 
 public class Vertex <K extends Comparable<K>,V>{
-  private int discoveryTime;
   private Vertex<K,V> predecessor;
   private final V value;
   private final K key;
   private int distance;
   private Color color;
-  private int finishTime;
 
   public Vertex(K key, V value) {
-    discoveryTime = 0;
     this.key = key;
     this.value = value;
     distance = 0;
     this.color = Color.WHITE;
-    finishTime = 0;
   }
 
   public V getValue() {
@@ -28,10 +24,6 @@ public class Vertex <K extends Comparable<K>,V>{
 
   public Color getColor() {
     return color;
-  }
-
-  public void setDiscoveryTime(int discoveryTime) {
-    this.discoveryTime = discoveryTime;
   }
 
   public void setColor(Color color) {
@@ -51,20 +43,12 @@ public class Vertex <K extends Comparable<K>,V>{
 
   }
 
-  public int getDiscoveryTime() {
-    return discoveryTime;
-  }
   public Vertex<K, V> getPredecessor() {
     return predecessor;
 
   }
 
-  public int getFinishTime() {
-    return finishTime;
-  }
-
-  public void setFinishTime(int finishTime) {
-    this.finishTime = finishTime;
+  public void setFinishTime() {
   }
 
 }

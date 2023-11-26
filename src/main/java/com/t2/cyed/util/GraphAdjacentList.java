@@ -13,43 +13,43 @@ public class GraphAdjacentList<K extends Comparable<K>, V> extends Graph<K, V> {
   }
 
   @Override
-  public void addVertex(K key, V value) {
+  public boolean addVertex(K key, V value) {
     if (!vertices.containsKey(key)) {
       vertices.put(key, new VertexAdjacentList<>(key, value));
       verticesPosition.put(key, numberVertexCurrent);
       numberVertexCurrent++;
+      return true;
     }
+    return false;
   }
 
 
   @Override
-  public void addEdge(K key1, K key2, int weight) {
+  public boolean addEdge(K key1, K key2, int weight) {
     VertexAdjacentList<K, V> v1 = vertices.get(key1);
     VertexAdjacentList<K, V> v2 = vertices.get(key2);
-
     if (v1 == null) {
-      return;
+      return false;
     }
     if (v2 == null) {
-      return;
+      return false;
     }
     if (!loops && key1.compareTo(key2) == 0) {
-      return;
+      return false;
     }
-
     Edge<K, V> edge = new Edge<>(v1, v2, weight);
     if (!multiple && v1.getEdges().contains(edge)) {
-      return;
+      return false;
     }
-
     v1.getEdges().add(edge);
     edges.add(edge);
-
     if (!directed) {
+
       Edge<K, V> edge2 = new Edge<>(v2, v1, weight);
       v2.getEdges().add(edge2);
       edges.add(edge2);
     }
+    return true;
   }
 
   @Override
@@ -171,7 +171,7 @@ public class GraphAdjacentList<K extends Comparable<K>, V> extends Graph<K, V> {
     }
     vertex.setColor(Color.BLACK);
     time += 1;
-    vertex.setFinishTime(time);
+    vertex.setFinishTime();
   }
 
 
@@ -197,7 +197,7 @@ public class GraphAdjacentList<K extends Comparable<K>, V> extends Graph<K, V> {
     VertexAdjacentList<K, V> currentNode = vertices.get(endNode);
     while (currentNode != null) {
       shortestPath.add((Integer) currentNode.getKey());
-      if(currentNode.getKey().equals(startNode)) {
+      if (currentNode.getKey().equals(startNode)) {
         break;
       }
       currentNode = (VertexAdjacentList<K, V>) currentNode.getPredecessor();
@@ -273,4 +273,17 @@ public class GraphAdjacentList<K extends Comparable<K>, V> extends Graph<K, V> {
     return edges;
   }
 
+  public boolean removeVertex(K i) {
+    boolean removed = false;
+    VertexAdjacentList<K, V> vertex = vertices.remove(i);
+    if (vertex != null) {
+      removed = true;
+      for (K KeyVertex : vertices.keySet()) {
+        VertexAdjacentList<K, V> vertexList = vertices.get(KeyVertex);
+        LinkedList<Edge<K, V>> edges = vertexList.getEdges();
+        edges.removeIf(edge -> edge.getDestination().getKey().compareTo(i) == 0);
+      }
+    }
+    return removed;
+  }
 }

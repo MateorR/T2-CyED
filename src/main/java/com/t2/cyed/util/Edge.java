@@ -1,9 +1,9 @@
 package com.t2.cyed.util;
 
-public class Edge <K extends Comparable<K>,V>{
-  private Vertex<K, V> start;
-  private Vertex<K, V> destination;
-  private int weight;
+public class Edge<K extends Comparable<K>, V> {
+  private final Vertex<K, V> start;
+  private final Vertex<K, V> destination;
+  private final int weight;
 
   public Edge(Vertex<K, V> start, Vertex<K, V> destination, int weight) {
     this.start = start;
@@ -15,24 +15,12 @@ public class Edge <K extends Comparable<K>,V>{
     return start;
   }
 
-  public void setStart(Vertex<K, V> start) {
-    this.start = start;
-  }
-
   public Vertex<K, V> getDestination() {
     return destination;
   }
 
-  public void setDestination(Vertex<K, V> destination) {
-    this.destination = destination;
-  }
-
   public int getWeight() {
     return weight;
-  }
-
-  public void setWeight(int weight) {
-    this.weight = weight;
   }
 
 }

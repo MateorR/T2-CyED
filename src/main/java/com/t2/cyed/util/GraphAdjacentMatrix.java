@@ -23,33 +23,36 @@ public class GraphAdjacentMatrix<K extends Comparable<K>, V> extends Graph<K, V>
   }
 
   @Override
-  public void addVertex(K key, V value) {
+  public boolean addVertex(K key, V value) {
     if (!vertices.containsKey(key)) {
       vertices.put(key, new Vertex<>(key, value));
       verticesPosition.put(key, numberVertexCurrent++);
+      return true;
     }
+    return false;
   }
 
   @Override
-  public void addEdge(K origin, K end, int weight) {
+  public boolean addEdge(K origin, K end, int weight) {
     vertexExist(origin, end);
     int vertex1 = indexVertex(origin);
     int vertex2 = indexVertex(end);
     if (!loops && vertex1 == vertex2) {
-      return;
+      return false;
     }
     if (!multiple && !matriz[vertex1][vertex2].isEmpty()) {
-      return;
+      return false;
     }
     matriz[vertex1][vertex2].add(weight);
     Collections.sort(matriz[vertex1][vertex2]);
 
-    edges.add(new Edge<>(vertices.get(origin), vertices.get(end), (int) weight));
+    edges.add(new Edge<>(vertices.get(origin), vertices.get(end), weight));
     if (!directed) {
       matriz[vertex2][vertex1].add(weight);
       Collections.sort(matriz[vertex2][vertex1]);
-      edges.add(new Edge<>(vertices.get(end), vertices.get(origin), (int) weight));
+      edges.add(new Edge<>(vertices.get(end), vertices.get(origin), weight));
     }
+    return true;
   }
 
   public boolean vertexExist(K key1, K key2) {
@@ -104,7 +107,7 @@ public class GraphAdjacentMatrix<K extends Comparable<K>, V> extends Graph<K, V>
 
   @Override
   public int size() {
-    return 0;
+    return vertices.size();
   }
 
   @Override
@@ -207,54 +210,6 @@ public class GraphAdjacentMatrix<K extends Comparable<K>, V> extends Graph<K, V>
   @Override
   public Vertex<K, V> getVertex(K key) {
     return vertices.get(key);
-  }
-
-  private void addEdgesToMinHeap(K key, PriorityQueue<Edge<K, V>> minHeap) {
-    int index = indexVertex(key);
-    for (int i = 0; i < matriz.length; i++) {
-      if (!matriz[index][i].isEmpty()) {
-        K neighborKey = null;
-        for (Map.Entry<K, Integer> entry : verticesPosition.entrySet()) {
-          if (entry.getValue() == i) {
-            neighborKey = entry.getKey();
-            break;
-          }
-        }
-        int weight = (int) matriz[index][i].get(0);
-        if (!minHeap.contains(new Edge<>(vertices.get(key), vertices.get(neighborKey), weight))) {
-          minHeap.add(new Edge<>(vertices.get(key), vertices.get(neighborKey), weight));
-        }
-      }
-    }
-  }
-
-  private ArrayList<Edge<K, V>> dfsVisit() {
-    if (directed) {
-      return null;
-    }
-
-    HashSet<K> visited = new HashSet<>();
-    PriorityQueue<Edge<K, V>> minHeap = new PriorityQueue<>(Comparator.comparingInt(Edge::getWeight));
-    ArrayList<Edge<K, V>> minimumSpanningTree = new ArrayList<>();
-
-    K startVertex = vertices.keySet().iterator().next();
-
-    visited.add(startVertex);
-    addEdgesToMinHeap(startVertex, minHeap);
-    while (visited.size() < vertices.size()) {
-      Edge<K, V> minEdge = minHeap.poll();
-      assert minEdge != null;
-      K fromKey = minEdge.getStart().getKey();
-      K toKey = minEdge.getDestination().getKey();
-
-      if (!visited.contains(toKey)) {
-        visited.add(toKey);
-        minimumSpanningTree.add(minEdge);
-        addEdgesToMinHeap(toKey, minHeap);
-      }
-    }
-
-    return minimumSpanningTree;
   }
 
 }
