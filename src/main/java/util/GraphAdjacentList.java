@@ -1,273 +1,347 @@
 package util;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.stream.Collectors;
+import java.util.*;
 
-public class GraphAdjacentList<K,V> implements Graphable<K,V>{
+public class GraphAdjacentList<K extends Comparable<K>, V> extends Graph<K, V> {
 
-    private GraphType type;
-    private Hashtable<K,GraphVertex<V>> vertices;
+  private final HashMap<K, VertexAdjacentList<K, V>> vertices;
 
-    public GraphAdjacentList(int type){
-        this.type = GraphType.values()[type];
-        this.vertices = new Hashtable<>();
+  public GraphAdjacentList(GraphType type) {
+    super(type);
+    vertices = new HashMap<>();
+  }
+
+  @Override
+  public void addVertex(K key, V value) {
+    if (!vertices.containsKey(key)) {
+      vertices.put(key, new VertexAdjacentList<>(key, value));
+      verticesPosition.put(key, numberVertexCurrent);
+      numberVertexCurrent++;
     }
-    @Override
-    public void addVertex(K key, V value){
-        if (!this.vertices.containsKey(key)){
-            vertices.put(key,new GraphVertex<>(value));
-        }
-    }
+  }
 
-    @Override
-    public void addEdge(K origin, K end, double weight){
-        if (vertices.containsKey(origin) && vertices.containsKey(end)){
-            GraphVertex<V> originVertex = vertices.get(origin);
-            GraphVertex<V> endVertex = vertices.get(end);
-            switch (this.type){
-                case SIMPLE:
-                    originVertex.addAdjacent(endVertex,weight);
-                    endVertex.addAdjacent(originVertex,weight);
-                    break;
-                case DIRECTED:
-                    originVertex.addAdjacent(endVertex,weight);
-                    break;
-            }
-        }
-    }
 
-    @Override
-    public GraphVertex<V> removeVertex(K key) {
-        GraphVertex<V> found = null;
-        if (vertices.containsKey(key)){
-            for (GraphVertex<V> vertex : vertices.values()) {
-                if (vertex.isAdjacent(vertices.get(key))){
-                    vertex.removeAdjacent(vertices.get(key));
-                }
-            }
-            found = vertices.remove(key);
-        }
-        return found;
+  @Override
+  public void addEdge(K key1, K key2, int weight) {
+    VertexAdjacentList<K, V> v1 = vertices.get(key1);
+    VertexAdjacentList<K, V> v2 = vertices.get(key2);
+
+    if (v1 == null) {
+      return;
+    }
+    if (v2 == null) {
+      return;
+    }
+    if (!loops && key1.compareTo(key2) == 0) {
+      return;
     }
 
-    @Override
-    public void removeEdge(K origin, K end) {
-        if (vertices.containsKey(origin) && vertices.containsKey(end)){
-            if (vertices.get(origin).isAdjacent(vertices.get(end))){
-                switch (this.type){
-                    case SIMPLE:
-                        vertices.get(origin).removeAdjacent(vertices.get(end));
-                        vertices.get(end).removeAdjacent(vertices.get(origin));
-                        break;
-                    case DIRECTED:
-                        vertices.get(origin).removeAdjacent(vertices.get(end));
-                        break;
-                }
-            }
-        }
+    Edge<K, V> edge = new Edge<>(v1, v2, weight);
+    if (!multiple && v1.getEdges().contains(edge)) {
+      return;
     }
 
-    @Override
-    public void bfs(K origin) {
-        for (GraphVertex<V> vertex : vertices.values()) {
-            vertex.setState(State.WHITE);
-            vertex.setDistance(Double.POSITIVE_INFINITY);
-            vertex.setParent(null);
-        }
-        this.vertices.get(origin).setState(State.GRAY);
-        this.vertices.get(origin).setDistance(0);
-        this.vertices.get(origin).setParent(null);
-        Queue<GraphVertex<V>> queue = new LinkedList<>();
-        queue.add(this.vertices.get(origin));
-        while (!queue.isEmpty()){
-            GraphVertex<V> current = queue.poll();
-            for (GraphVertex<V> adjacent : current.getAdjacentsVertices()) {
-                if (adjacent.getState() == State.WHITE){
-                    adjacent.setState(State.GRAY);
-                    adjacent.setDistance(current.getDistance()+1);
-                    adjacent.setParent(current);
-                    queue.add(adjacent);
-                }
-            }
-            current.setState(State.BLACK);
-        }
+    v1.getEdges().add(edge);
+    edges.add(edge);
+
+    if (!directed) {
+      Edge<K, V> edge2 = new Edge<>(v2, v1, weight);
+      v2.getEdges().add(edge2);
+      edges.add(edge2);
+    }
+  }
+
+  @Override
+  public void bfs(K origin) {
+    for (K key : vertices.keySet()) {
+      Vertex<K, V> vertex = vertices.get(key);
+      vertex.setColor(Color.WHITE);
+      vertex.setDistance(INFINITE);
+      vertex.setPredecessor(null);
     }
 
-    @Override
-    public void dfs() {
-        for (GraphVertex<V> vertex : vertices.values()) {
-            vertex.setState(State.WHITE);
-            vertex.setParent(null);
-        }
-        int time = 0;
-        for (GraphVertex<V> vertex : vertices.values()) {
-            if (vertex.getState() == State.WHITE){
-                dfsVisit(vertex,time);
-            }
-        }
+    VertexAdjacentList<K, V> vertexL = vertices.get(origin);
+    if (vertexL == null) {
+      return;
     }
 
-    private void dfsVisit(GraphVertex<V> vertex, int time){
-        time++;
-        vertex.setTime(time);
-        vertex.setState(State.GRAY);
-        for (GraphVertex<V> adjacent : vertex.getAdjacentsVertices()) {
-            if (adjacent.getState() == State.WHITE){
-                adjacent.setParent(vertex);
-                dfsVisit(adjacent,time);
-            }
+    vertexL.setColor(Color.GRAY);
+    vertexL.setDistance(0);
+    Queue<VertexAdjacentList<K, V>> queue = new LinkedList<>();
+    queue.offer(vertexL);
+    while (!queue.isEmpty()) {
+      VertexAdjacentList<K, V> vertex = queue.poll();
+      LinkedList<Edge<K, V>> edges = vertex.getEdges();
+      for (Edge<K, V> edge : edges) {
+
+        VertexAdjacentList<K, V> vertex2 = (VertexAdjacentList<K, V>) edge.getDestination();
+        if (vertex2.getColor() == Color.WHITE) {
+          vertex2.setColor(Color.GRAY);
+          vertex2.setDistance(vertex.getDistance() + 1);
+          vertex2.setPredecessor(vertex);
+          queue.offer(vertex2);
         }
-        vertex.setState(State.BLACK);
-        time++;
-        vertex.setFinalTime(time);
+      }
+      vertex.setColor(Color.BLACK);
+    }
+  }
+
+  @Override
+  public int size() {
+    return vertices.size();
+  }
+
+  public boolean removeEdge(K key1, K key2) {
+    boolean removed = false;
+    VertexAdjacentList<K, V> v1 = vertices.get(key1);
+    VertexAdjacentList<K, V> v2 = vertices.get(key2);
+    if (v1 == null || v2 == null) {
+      return false;
     }
 
-    @Override
-    public ArrayList<GraphVertex<V>> dijsktra(K origin, K end) {
-        this.vertices.get(origin).setDistance(0);
-        MinPriorityQueue<GraphVertex<V>> queue = new MinPriorityQueue<>();
-        for (GraphVertex<V> vertex : vertices.values()) {
-            vertex.setDistance(Double.POSITIVE_INFINITY);
-            vertex.setParent(null);
-            queue.insert(vertex);
-        }
-        while (!queue.isEmpty()){
-            GraphVertex<V> current = queue.extractMin();
-            for (GraphVertex<V> vertex : current.getAdjacentsVertices()) {
-                double weight = current.getDistance() + current.lenghtTo(vertex);
-                if (weight < vertex.getDistance()){
-                    vertex.setDistance(weight);
-                    vertex.setParent(current);
-                    queue.decreaseKey(queue.getElements().indexOf(vertex),vertex);
-                }
-            }
-        }
-        ArrayList<GraphVertex<V>> path = new ArrayList<>();
-        GraphVertex<V> current = vertices.get(end);
-        while (current != null){
-            path.add(0,current);
-            current = current.getParent();
-        }
-        return path;
+    List<Edge<K, V>> edgesV1 = v1.getEdges();
+    for (Iterator<Edge<K, V>> iterator = edgesV1.iterator(); iterator.hasNext(); ) {
+      Edge<K, V> edge = iterator.next();
+      if (edge.getDestination().getKey().compareTo(key2) == 0) {
+        iterator.remove();
+        removed = true;
+      }
     }
 
-    @Override
-    public double[][] floydWarshall() {
-        double[][] matrix = new double[vertices.size()][vertices.size()];
-        for (int i = 0; i < vertices.size(); i++) {
-            for (int j = 0; j < vertices.size(); j++) {
-                matrix[i][j] = Double.POSITIVE_INFINITY;
-            }
+    if (!directed) {
+      List<Edge<K, V>> edgesV2 = v2.getEdges();
+      edgesV2.removeIf(edge -> edge.getDestination().getKey().compareTo(key1) == 0);
+    }
+    return removed;
+  }
+
+
+  public boolean adjacent(K keyVertex1, K keyVertex2) {
+    boolean adjacent = false;
+    VertexAdjacentList<K, V> v1 = vertices.get(keyVertex1);
+    VertexAdjacentList<K, V> v2 = vertices.get(keyVertex2);
+    if (v1 != null && v2 != null) {
+      LinkedList<Edge<K, V>> edges1 = v1.getEdges();
+      for (Edge<K, V> edge : edges1) {
+        if (edge.getDestination().getKey().compareTo(keyVertex2) == 0) {
+          adjacent = true;
+          break;
         }
-        for (int i = 0; i < vertices.size(); i++) {
-            matrix[i][i] = 0;
-        }
-        for (GraphVertex<V> vertex : vertices.values()) {
-            for (GraphVertex<V> adjacent : vertex.getAdjacentsVertices()) {
-                matrix[getIndex(vertex)][getIndex(adjacent)] = vertex.lenghtTo(adjacent);
-            }
-        }
-        for (int k = 0; k < vertices.size(); k++) {
-            for (int i = 0; i < vertices.size(); i++) {
-                for (int j = 0; j < vertices.size(); j++) {
-                    if (matrix[i][k] + matrix[k][j] < matrix[i][j]){
-                        matrix[i][j] = matrix[i][k] + matrix[k][j];
-                    }
-                }
-            }
-        }
-        return matrix;
+      }
     }
 
-    @Override
-    public void prim(GraphVertex<V> r) {
-        for (GraphVertex<V> vertex : vertices.values()) {
-            vertex.setDistance(Double.POSITIVE_INFINITY);
-            vertex.setParent(null);
-            vertex.setState(State.WHITE);
+    return adjacent;
+  }
+
+  private int verticesIndex(K key) {
+    Integer index = verticesPosition.get(key);
+
+
+    return index == null ? -1 : index;
+  }
+
+  public void DFS() {
+    if (!vertices.isEmpty()) {
+      for (VertexAdjacentList<K, V> vertex : vertices.values()) {
+        vertex.setColor(Color.WHITE);
+        vertex.setPredecessor(null);
+      }
+      time = 0;
+      for (VertexAdjacentList<K, V> vertex : vertices.values()) {
+        if (vertex.getColor() == Color.WHITE) {
+          DFSVisit(vertex, time);
         }
-        r.setDistance(0);
-        MinPriorityQueue<GraphVertex<V>> queue = new MinPriorityQueue<>();
-        for (GraphVertex<V> vertex : vertices.values()) {
-            queue.insert(vertex);
+      }
+    }
+  }
+
+  private void DFSVisit(VertexAdjacentList<K, V> vertex, int t) {
+    time += 1;
+    vertex.setDistance(time);
+
+    vertex.setColor(Color.GRAY);
+    LinkedList<Edge<K, V>> edges = vertex.getEdges();
+    for (Edge<K, V> edge : edges) {
+      VertexAdjacentList<K, V> vertex2 = (VertexAdjacentList<K, V>) edge.getDestination();
+      if (vertex2.getColor() == Color.WHITE) {
+        vertex2.setPredecessor(vertex);
+        DFSVisit(vertex2, time);
+      }
+    }
+    vertex.setColor(Color.BLACK);
+    time += 1;
+    vertex.setFinishTime(time);
+  }
+
+
+  @Override
+  public ArrayList<Integer> dijkstra(K keyVertexSource) {
+    if (vertices.get(keyVertexSource) == null) {
+      return null;
+    }
+    for (VertexAdjacentList<K, V> vertex : vertices.values()) {
+      if (vertex.getKey().compareTo(keyVertexSource) != 0)
+        vertex.setDistance(INFINITE);
+      vertex.setPredecessor(null);
+    }
+
+    PriorityQueue<VertexAdjacentList<K, V>> priority = new PriorityQueue<>(Comparator.comparingInt(Vertex::getDistance));
+    for (VertexAdjacentList<K, V> vertex : vertices.values()) {
+      priority.offer(vertex);
+    }
+    while (!priority.isEmpty()) {
+      VertexAdjacentList<K, V> vertex = priority.poll();
+      LinkedList<Edge<K, V>> edges = vertex.getEdges();
+      for (Edge<K, V> edge : edges) {
+        VertexAdjacentList<K, V> vertex2 = (VertexAdjacentList<K, V>) edge.getDestination();
+        int weight = edge.getWeight() + vertex.getDistance();
+        if (weight < vertex2.getDistance()) {
+          priority.remove(vertex2);
+          vertex2.setDistance(weight);
+          vertex2.setPredecessor(vertex);
+          priority.offer(vertex2);
         }
-        while (!queue.isEmpty()){
-            GraphVertex<V> current = queue.extractMin();
-            for (GraphVertex<V> vertex : current.getAdjacentsVertices()) {
-                if (vertex.getState()==State.WHITE && current.lenghtTo(vertex) < vertex.getDistance()){
-                    vertex.setDistance(current.lenghtTo(vertex));
-                    queue.decreaseKey(queue.getElements().indexOf(vertex),vertex);
-                    vertex.setParent(current);
-                }
-            }
+      }
+    }
+    return vertices.values().stream().map(Vertex::getDistance).collect(Collectors.toCollection(ArrayList::new));
+  }
+
+
+  @Override
+  public ArrayList<Integer> shortestPath(K startNode, K endNode) {
+    if (vertices.get(startNode) == null || vertices.get(endNode) == null) {
+      return null;
+    }
+
+    for (VertexAdjacentList<K, V> vertex : vertices.values()) {
+      if (vertex.getKey().compareTo(startNode) != 0)
+        vertex.setDistance(INFINITE);
+      vertex.setPredecessor(null);
+    }
+
+    PriorityQueue<VertexAdjacentList<K, V>> priority = new PriorityQueue<>(
+        Comparator.comparingInt(Vertex::getDistance));
+    for (VertexAdjacentList<K, V> vertex : vertices.values()) {
+      priority.offer(vertex);
+    }
+
+    while (!priority.isEmpty()) {
+      VertexAdjacentList<K, V> vertex = priority.poll();
+      LinkedList<Edge<K, V>> edges = vertex.getEdges();
+      for (Edge<K, V> edge : edges) {
+        VertexAdjacentList<K, V> vertex2 = (VertexAdjacentList<K, V>) edge.getDestination();
+        int weight = edge.getWeight() + vertex.getDistance();
+        if (weight < vertex2.getDistance()) {
+          priority.remove(vertex2);
+          vertex2.setDistance(weight);
+          vertex2.setPredecessor(vertex);
+          priority.offer(vertex2);
         }
+      }
     }
 
-    public int getIndex(GraphVertex<V> vertex){
-        ArrayList<K> keys = vertexNumeration();
-        int index = -1;
-        for (int i = 0; i < keys.size(); i++) {
-            if (vertices.get(keys.get(i)).equals(vertex)){
-                index = i;
-            }
+    ArrayList<Integer> shortestPath = new ArrayList<>();
+    VertexAdjacentList<K, V> currentNode = vertices.get(endNode);
+    while (currentNode != null) {
+      shortestPath.add((Integer) currentNode.getKey());
+      if(currentNode.getKey().equals(startNode)) {
+        break;
+      }
+      currentNode = (VertexAdjacentList<K, V>) currentNode.getPredecessor();
+    }
+    Collections.reverse(shortestPath);
+
+    return shortestPath;
+  }
+
+  @Override
+  public ArrayList<Edge<K, V>> kruskal() {
+    ArrayList<Edge<K, V>> mst = new ArrayList<>();
+    UnionFind unionFind = new UnionFind(vertices.size());
+    edges.sort(Comparator.comparingInt(Edge::getWeight));
+    for (Edge<K, V> edge : edges) {
+      VertexAdjacentList<K, V> vertex1 = (VertexAdjacentList<K, V>) edge.getStart();
+      VertexAdjacentList<K, V> vertex2 = (VertexAdjacentList<K, V>) edge.getDestination();
+      if (unionFind.find(verticesIndex(vertex1.getKey())) != unionFind.find(verticesIndex(vertex2.getKey()))) {
+        mst.add(edge);
+        unionFind.union(verticesIndex(vertex1.getKey()), verticesIndex(vertex2.getKey()));
+      }
+    }
+    return mst;
+  }
+
+  public Vertex<K, V> getVertex(K key) {
+    return vertices.get(key);
+  }
+
+  public HashMap<K, VertexAdjacentList<K, V>> getVertices() {
+    return vertices;
+  }
+
+  private void addEdgesToMinHeap(K key, PriorityQueue<Edge<K, V>> minHeap) {
+    VertexAdjacentList<K, V> vertex = vertices.get(key);
+    for (Edge<K, V> edge : vertex.getEdges()) {
+      K neighborKey = edge.getDestination().getKey();
+      int weight = edge.getWeight();
+      if (!minHeap.contains(new Edge<>(vertex, vertices.get(neighborKey), weight))) {
+        minHeap.add(new Edge<>(vertex, vertices.get(neighborKey), weight));
+      }
+    }
+  }
+
+  public ArrayList<ArrayList<Integer>> floydWarshall() {
+    int size = numberVertexCurrent;
+    ArrayList<ArrayList<Integer>> dist = new ArrayList<>();
+
+    for (int i = 0; i < size; i++) {
+      ArrayList<Integer> row = new ArrayList<>();
+      for (int j = 0; j < size; j++) {
+        if (i == j) {
+          row.add(0);
+        } else {
+          row.add(INFINITE);
         }
-        return index;
-    }
-    public ArrayList<K> vertexNumeration(){
-        return new ArrayList<>(vertices.keySet());
+      }
+      dist.add(row);
     }
 
-    @Override
-    public int size() {
-        int count = 0;
-        for (GraphVertex<V> vertex : vertices.values()) {
-            if (vertex != null){
-                count++;
-            }
+    for (Edge<K, V> edge : edges) {
+      int fromIndex = verticesIndex(edge.getStart().getKey());
+      int toIndex = verticesIndex(edge.getDestination().getKey());
+      dist.get(fromIndex).set(toIndex, edge.getWeight());
+    }
+
+    for (int k = 0; k < size; k++) {
+      for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+          int directPath = dist.get(i).get(j);
+          int throughK = dist.get(i).get(k) + dist.get(k).get(j);
+          if (throughK < directPath) {
+            dist.get(i).set(j, throughK);
+          }
         }
-        return count;
+      }
     }
 
-    public GraphType getType() {
-        return type;
+    return dist;
+  }
+
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("Vertices:\n");
+    for (Vertex<K, V> vertex : vertices.values()) {
+      sb.append(vertex.getKey()).append(" ");
     }
-
-    public void setType(GraphType type) {
-        this.type = type;
+    sb.append("\n\nEdges:\n");
+    for (Edge<K, V> edge : edges) {
+      sb.append(edge.getStart().getKey()).append(" -> ").append(edge.getDestination().getKey()).append(" (").append(edge.getWeight()).append(")\n");
     }
+    return sb.toString();
+  }
 
-    public Hashtable<K, GraphVertex<V>> getVertices() {
-        return vertices;
-    }
-
-    public void setVertices(Hashtable<K, GraphVertex<V>> vertices) {
-        this.vertices = vertices;
-    }
-
-    public boolean isStronglyConnected() {
-        boolean connected = true;
-        for (K key: vertices.keySet()) {
-            bfs(key);
-            if (bfsParents(key) < vertices.size()-1){
-                connected = false;
-            }
-        }
-        return connected;
-    }
-
-    public int bfsParents(K origin){
-        int count=0;
-        for (GraphVertex<V> vertex : vertices.values()) {
-            if (vertex.getParent()!=null){
-                count++;
-            }
-        }
-        return count;
-    }
-
-
-
+  public LinkedList<Edge<K, V>> getEdge() {
+    return edges;
+  }
 
 }

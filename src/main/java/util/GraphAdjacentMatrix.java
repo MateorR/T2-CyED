@@ -1,296 +1,264 @@
 package util;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
+import java.util.stream.Collectors;
 
-public class GraphAdjacentMatrix<K, V> implements Graphable<K,V> {
+public class GraphAdjacentMatrix<K extends Comparable<K>, V> extends Graph<K, V> {
+  private final HashMap<K, Vertex<K, V>> vertices;
+  private final ArrayList<Integer>[][] matriz;
 
-    private GraphType type;
-    private Hashtable<K,GraphVertex<V>> vertices;
-    private ArrayList<K> keys;
-    private double[][] edges;
+  public GraphAdjacentMatrix(int vertexNumber, GraphType type) {
+    super(type);
+    vertices = new HashMap<>();
+    matriz = new ArrayList[vertexNumber][vertexNumber];
+    int i = 0;
+    do {
+      int j = 0;
+      do {
+        matriz[i][j] = new ArrayList<>();
+        j++;
+      } while (j < vertexNumber);
+      i++;
+    } while (i < vertexNumber);
+  }
 
-    public GraphAdjacentMatrix(int type, int maxVertices){
-        this.type = GraphType.values()[type];
-        this.vertices = new Hashtable<>();
-        this.keys = new ArrayList<>();
-        this.edges = new double[maxVertices][maxVertices];
+  @Override
+  public void addVertex(K key, V value) {
+    if (!vertices.containsKey(key)) {
+      vertices.put(key, new Vertex<>(key, value));
+      verticesPosition.put(key, numberVertexCurrent++);
     }
-    @Override
-    public void addVertex(K key, V value) {
-        if (!this.keys.contains(key)){
-            vertices.put(key,new GraphVertex<>(value));
-            keys.add(key);
+  }
+
+  @Override
+  public void addEdge(K origin, K end, int weight) {
+    vertexExist(origin, end);
+    int vertex1 = indexVertex(origin);
+    int vertex2 = indexVertex(end);
+    if (!loops && vertex1 == vertex2) {
+      return;
+    }
+    if (!multiple && !matriz[vertex1][vertex2].isEmpty()) {
+      return;
+    }
+    matriz[vertex1][vertex2].add(weight);
+    Collections.sort(matriz[vertex1][vertex2]);
+
+    edges.add(new Edge<>(vertices.get(origin), vertices.get(end), (int) weight));
+    if (!directed) {
+      matriz[vertex2][vertex1].add(weight);
+      Collections.sort(matriz[vertex2][vertex1]);
+      edges.add(new Edge<>(vertices.get(end), vertices.get(origin), (int) weight));
+    }
+  }
+
+  public boolean vertexExist(K key1, K key2) {
+    if (!vertices.containsKey(key1)) {
+      return false;
+    }
+    return vertices.containsKey(key2);
+  }
+
+  private int indexVertex(K key) {
+    Integer index = verticesPosition.get(key);
+
+    return index == null ? -1 : index;
+  }
+
+
+  @Override
+  public boolean adjacent(K keyVertex1, K keyVertex2) {
+    if (!vertexExist(keyVertex1, keyVertex2)) {
+      return false;
+    }
+    ;
+    return !matriz[indexVertex(keyVertex1)][indexVertex(keyVertex2)].isEmpty();
+  }
+
+  @Override
+  public void bfs(K keyVertex) {
+    for (Vertex<K, V> vertex : vertices.values()) {
+      vertex.setColor(Color.WHITE);
+      vertex.setDistance(INFINITE);
+      vertex.setPredecessor(null);
+    }
+    Vertex<K, V> vertex = vertices.get(keyVertex);
+    vertex.setColor(Color.GRAY);
+    vertex.setDistance(0);
+    Queue<Vertex<K, V>> queue = new LinkedList<>();
+    queue.offer(vertex);
+    while (!queue.isEmpty()) {
+      Vertex<K, V> u = queue.poll();
+      for (Vertex<K, V> v : vertices.values()) {
+        if (adjacent(u.getKey(), v.getKey()) && v.getColor() == Color.WHITE) {
+          v.setColor(Color.GRAY);
+          v.setDistance(u.getDistance() + 1);
+          v.setPredecessor(u);
+          queue.offer(v);
+
         }
+      }
+      u.setColor(Color.BLACK);
     }
+  }
 
-    @Override
-    public void addEdge(K origin, K end, double weight) {
-        if (this.vertices.containsKey(origin) && this.vertices.containsKey(end)){
-            switch (this.type){
-                case SIMPLE:
-                    for (int i = 0; i < this.edges.length; i++) {
-                        for (int j = 0; j < this.edges.length; j++) {
-                            if (i == this.keys.indexOf(origin) && j == this.keys.indexOf(end)) {
-                                edges[i][j] = weight;
-                                edges[j][i] = weight;
-                            }
-                        }
-                    }
-                    break;
-                case DIRECTED:
-                    for (int i = 0; i < this.edges.length; i++) {
-                        for (int j = 0; j < this.edges.length; j++) {
-                            if (i == this.keys.indexOf(origin) && j == this.keys.indexOf(end)){
-                                edges[i][j] = weight;
-                            }
-                        }
-                    }
-                    break;
-            }
+  @Override
+  public int size() {
+    return 0;
+  }
+
+  @Override
+  public LinkedList<Edge<K, V>> getEdge() {
+    return edges;
+  }
+
+  @Override
+  public ArrayList<Integer> dijkstra(K keyVertexSource) {
+    if (!vertices.containsKey(keyVertexSource)) {
+      return null;
+    }
+    for (Vertex<K, V> vertex : vertices.values()) {
+      if (vertex.getKey().compareTo(keyVertexSource) != 0)
+        vertex.setDistance(INFINITE);
+      vertex.setPredecessor(null);
+    }
+    vertices.get(keyVertexSource).setDistance(0);
+    PriorityQueue<Vertex<K, V>> queue = new PriorityQueue<>(Comparator.comparingInt(Vertex::getDistance));
+    for (Vertex<K, V> vertex : vertices.values()) {
+      queue.offer(vertex);
+    }
+    while (!queue.isEmpty()) {
+      Vertex<K, V> u = queue.poll();
+
+      for (Vertex<K, V> v : vertices.values()) {
+        if (adjacent(u.getKey(), v.getKey())) {
+          int weight = u.getDistance() + matriz[indexVertex(u.getKey())][indexVertex(v.getKey())].get(0);
+          if (weight < v.getDistance() || v.getDistance() < -100) {
+            v.setDistance(weight);
+            v.setPredecessor(u);
+            queue.offer(v);
+          }
         }
+      }
     }
+    return vertices.values().stream().map(Vertex::getDistance).collect(Collectors.toCollection(ArrayList::new));
+  }
 
-    @Override
-    public GraphVertex<V> removeVertex(K key) {
-        GraphVertex<V> found = null;
-        if (this.vertices.containsKey(key)){
-            for (int i = 0; i < this.edges.length; i++) {
-                for (int j = 0; j < this.edges.length; j++) {
-                    if (i == this.keys.indexOf(key) || j == this.keys.indexOf(key)){
-                        edges[i][j] = 0;
-                    }
-                }
-            }
-            found = vertices.remove(key);
-            keys.remove(key);
+  @Override
+  public ArrayList<Integer> shortestPath(K start, K end) {
+    if (!vertices.containsKey(start) || !vertices.containsKey(end)) {
+      return null;
+    }
+    for (Vertex<K, V> vertex : vertices.values()) {
+      if (vertex.getKey().compareTo(start) != 0) {
+        vertex.setDistance(INFINITE);
+      }
+      vertex.setPredecessor(null);
+    }
+    vertices.get(start).setDistance(0);
+    PriorityQueue<Vertex<K, V>> queue = new PriorityQueue<>(Comparator.comparingInt(Vertex::getDistance));
+    for (Vertex<K, V> vertex : vertices.values()) {
+      queue.offer(vertex);
+    }
+    while (!queue.isEmpty()) {
+      Vertex<K, V> u = queue.poll();
+      for (Vertex<K, V> v : vertices.values()) {
+        if (adjacent(u.getKey(), v.getKey())) {
+          int weight = matriz[indexVertex(u.getKey())][indexVertex(v.getKey())].get(0) + u.getDistance();
+          if (weight < v.getDistance()) {
+            v.setDistance(weight);
+            v.setPredecessor(u);
+            queue.offer(v);
+          }
         }
-        return found;
+      }
     }
 
-    @Override
-    public void removeEdge(K origin, K end) {
-        if (this.vertices.containsKey(origin) && this.vertices.containsKey(end)){
-            switch (this.type){
-                case SIMPLE:
-                    for (int i = 0; i < this.edges.length; i++) {
-                        for (int j = 0; j < this.edges.length; j++) {
-                            if (i == this.keys.indexOf(origin) && j == this.keys.indexOf(end)){
-                                edges[i][j] = 0;
-                                edges[j][i] = 0;
-                            }
-                        }
-                    }
-                    break;
-                case DIRECTED:
-                    for (int i = 0; i < this.edges.length; i++) {
-                        for (int j = 0; j < this.edges.length; j++) {
-                            if (i == this.keys.indexOf(origin) && j == this.keys.indexOf(end)){
-                                edges[i][j] = 0;
-                            }
-                        }
-                    }
-                    break;
-            }
+    ArrayList<Integer> shortestPath = new ArrayList<>();
+    Vertex<K, V> currentNode = vertices.get(end);
+    while (currentNode != null && !currentNode.getKey().equals(start)) {
+      shortestPath.add((Integer) currentNode.getKey());
+      currentNode = currentNode.getPredecessor();
+    }
+    shortestPath.add((Integer) start);
+    Collections.reverse(shortestPath);
+
+    return shortestPath;
+  }
+
+  @Override
+  public ArrayList<Edge<K, V>> kruskal() {
+    ArrayList<Edge<K, V>> edgesG = new ArrayList();
+    UnionFind findUnion = new UnionFind(matriz.length);
+    edges.sort(Comparator.comparingInt(Edge::getWeight));
+
+    for (Edge<K, V> edge : edges) {
+      int keyIndex1 = indexVertex(edge.getStart().getKey());
+      int keyIndex2 = indexVertex(edge.getDestination().getKey());
+
+      if (findUnion.find(keyIndex1) != findUnion.find(keyIndex2)) {
+        edgesG.add(edge);
+        findUnion.union(keyIndex1, keyIndex2);
+      }
+    }
+    return edgesG;
+  }
+
+  @Override
+  public Vertex<K, V> getVertex(K key) {
+    return vertices.get(key);
+  }
+
+  public HashMap<K, Vertex<K, V>> getVertices() {
+    return vertices;
+  }
+
+  private void addEdgesToMinHeap(K key, PriorityQueue<Edge<K, V>> minHeap) {
+    int index = indexVertex(key);
+    for (int i = 0; i < matriz.length; i++) {
+      if (!matriz[index][i].isEmpty()) {
+        K neighborKey = null;
+        for (Map.Entry<K, Integer> entry : verticesPosition.entrySet()) {
+          if (entry.getValue() == i) {
+            neighborKey = entry.getKey();
+            break;
+          }
         }
-    }
-
-    @Override
-    public void bfs(K origin) {
-        for (GraphVertex<V> vertex : vertices.values()) {
-            vertex.setState(State.WHITE);
-            vertex.setDistance(Double.POSITIVE_INFINITY);
-            vertex.setParent(null);
+        int weight = (int) matriz[index][i].get(0);
+        if (!minHeap.contains(new Edge<>(vertices.get(key), vertices.get(neighborKey), weight))) {
+          minHeap.add(new Edge<>(vertices.get(key), vertices.get(neighborKey), weight));
         }
-        this.vertices.get(origin).setState(State.GRAY);
-        this.vertices.get(origin).setDistance(0);
-        this.vertices.get(origin).setParent(null);
-        Queue<GraphVertex<V>> queue = new LinkedList<>();
-        queue.add(this.vertices.get(origin));
-        while (!queue.isEmpty()){
-            GraphVertex<V> current = queue.poll();
-            for (GraphVertex<V> adjacent : getAdjacentsV(current)) {
-                if (adjacent.getState() == State.WHITE){
-                    adjacent.setState(State.GRAY);
-                    adjacent.setDistance(current.getDistance()+1);
-                    adjacent.setParent(current);
-                    queue.add(adjacent);
-                }
-            }
-            current.setState(State.BLACK);
-        }
+      }
+    }
+  }
+
+  private ArrayList<Edge<K, V>> dfsVisit() {
+    if (directed) {
+      return null;
     }
 
-    private ArrayList<GraphVertex<V>> getAdjacentsV(GraphVertex<V> current) {
-        ArrayList<GraphVertex<V>> adjacents = new ArrayList<>();
-        for (int i = 0; i < this.edges.length; i++) {
-            if (this.edges[this.keys.indexOf(getKey(current))][i] != 0){
-                adjacents.add(this.vertices.get(this.keys.get(i)));
-            }
-        }
-        return adjacents;
+    HashSet<K> visited = new HashSet<>();
+    PriorityQueue<Edge<K, V>> minHeap = new PriorityQueue<>(Comparator.comparingInt(Edge::getWeight));
+    ArrayList<Edge<K, V>> minimumSpanningTree = new ArrayList<>();
+
+    K startVertex = vertices.keySet().iterator().next(); // Comenzar desde un vértice arbitrario
+
+    visited.add(startVertex);
+    addEdgesToMinHeap(startVertex, minHeap);
+    while (visited.size() < vertices.size()) {
+      Edge<K, V> minEdge = minHeap.poll();
+      assert minEdge != null;
+      K fromKey = minEdge.getStart().getKey();
+      K toKey = minEdge.getDestination().getKey();
+
+      if (!visited.contains(toKey)) {
+        visited.add(toKey);
+        minimumSpanningTree.add(minEdge);
+        addEdgesToMinHeap(toKey, minHeap);
+      }
     }
 
-    @Override
-    public void dfs() {
-        for (GraphVertex<V> vertex : vertices.values()) {
-            vertex.setState(State.WHITE);
-            vertex.setParent(null);
-        }
-        int time = 0;
-        for (GraphVertex<V> vertex : vertices.values()) {
-            if (vertex.getState() == State.WHITE){
-                dfsVisit(vertex,time);
-            }
-        }
-    }
-
-    private void dfsVisit(GraphVertex<V> vertex, int time){
-        time++;
-        vertex.setTime(time);
-        vertex.setState(State.GRAY);
-        for (GraphVertex<V> adjacent : getAdjacentsV(vertex)) {
-            if (adjacent.getState() == State.WHITE){
-                adjacent.setParent(vertex);
-                dfsVisit(adjacent,time);
-            }
-        }
-        vertex.setState(State.BLACK);
-        time++;
-        vertex.setFinalTime(time);
-    }
-
-    @Override
-    public ArrayList<GraphVertex<V>> dijsktra(K origin, K end) {
-        this.vertices.get(origin).setDistance(0);
-        MinPriorityQueue<GraphVertex<V>> queue = new MinPriorityQueue<>();
-        for (GraphVertex<V> vertex : vertices.values()) {
-            vertex.setDistance(Double.POSITIVE_INFINITY);
-            vertex.setParent(null);
-            queue.insert(vertex);
-        }
-        while (!queue.isEmpty()){
-            GraphVertex<V> current = queue.extractMin();
-            for (GraphVertex<V> vertex : getAdjacentsV(current)) {
-                double weight = current.getDistance() + current.lenghtTo(vertex);
-                if (weight < vertex.getDistance()){
-                    vertex.setDistance(weight);
-                    vertex.setParent(current);
-                    queue.decreaseKey(queue.getElements().indexOf(vertex),vertex);
-                }
-            }
-        }
-        ArrayList<GraphVertex<V>> path = new ArrayList<>();
-        GraphVertex<V> current = vertices.get(end);
-        while (current != null){
-            path.add(0,current);
-            current = current.getParent();
-        }
-        return path;
-    }
-
-    @Override
-    public double[][] floydWarshall() {
-        double[][] matrix = new double[vertices.size()][vertices.size()];
-        for (int i = 0; i < vertices.size(); i++) {
-            for (int j = 0; j < vertices.size(); j++) {
-                matrix[i][j] = Double.POSITIVE_INFINITY;
-            }
-        }
-        for (int i = 0; i < vertices.size(); i++) {
-            matrix[i][i] = 0;
-        }
-        for (GraphVertex<V> vertex : vertices.values()) {
-            for (GraphVertex<V> adjacent : getAdjacentsV(vertex)) {
-                matrix[this.keys.indexOf(getKey(vertex))][this.keys.indexOf(getKey(adjacent))] = vertex.lenghtTo(adjacent);
-            }
-        }
-        for (int k = 0; k < vertices.size(); k++) {
-            for (int i = 0; i < vertices.size(); i++) {
-                for (int j = 0; j < vertices.size(); j++) {
-                    if (matrix[i][k] + matrix[k][j] < matrix[i][j]){
-                        matrix[i][j] = matrix[i][k] + matrix[k][j];
-                    }
-                }
-            }
-        }
-        return matrix;
-    }
-
-    @Override
-    public void prim(GraphVertex<V> r) {
-        for (GraphVertex<V> vertex : vertices.values()) {
-            vertex.setDistance(Double.POSITIVE_INFINITY);
-            vertex.setParent(null);
-            vertex.setState(State.WHITE);
-        }
-        r.setDistance(0);
-        MinPriorityQueue<GraphVertex<V>> queue = new MinPriorityQueue<>();
-        for (GraphVertex<V> vertex : vertices.values()) {
-            queue.insert(vertex);
-        }
-        while (!queue.isEmpty()){
-            GraphVertex<V> current = queue.extractMin();
-            for (GraphVertex<V> vertex : getAdjacentsV(current)) {
-                if (vertex.getState()==State.WHITE && current.lenghtTo(vertex) < vertex.getDistance()){
-                    vertex.setDistance(current.lenghtTo(vertex));
-                    queue.decreaseKey(queue.getElements().indexOf(vertex),vertex);
-                    vertex.setParent(current);
-                }
-            }
-        }
-    }
-
-    @Override
-    public int size() {
-        return 0;
-    }
-
-    public K getKey(GraphVertex<V> vertex){
-        for (K key : vertices.keySet()) {
-            if (vertices.get(key).equals(vertex)){
-                return key;
-            }
-        }
-        return null;
-    }
-    public GraphVertex<V> getVertex(K key){
-        return vertices.get(key);
-    }
-
-    public GraphType getType() {
-        return type;
-    }
-
-    public void setType(GraphType type) {
-        this.type = type;
-    }
-
-    public Hashtable<K, GraphVertex<V>> getVertices() {
-        return vertices;
-    }
-
-    public void setVertices(Hashtable<K, GraphVertex<V>> vertices) {
-        this.vertices = vertices;
-    }
-
-    public ArrayList<K> getKeys() {
-        return keys;
-    }
-
-    public void setKeys(ArrayList<K> keys) {
-        this.keys = keys;
-    }
-
-    public double[][] getEdges() {
-        return edges;
-    }
-
-    public void setEdges(double[][] edges) {
-        this.edges = edges;
-    }
-
+    return minimumSpanningTree;
+  }
 
 }

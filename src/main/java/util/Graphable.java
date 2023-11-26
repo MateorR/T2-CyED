@@ -1,28 +1,22 @@
 package util;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
-public interface Graphable<K,V> {
+public interface Graphable<K extends Comparable<K>,V> {
     public void addVertex(K key, V value);
-
-    public void addEdge(K origin, K end, double weight);
-
-    public GraphVertex<V> removeVertex(K key);
-
-    public void removeEdge(K origin, K end);
+    public void addEdge(K origin, K end, int weight);
 
     public void bfs(K origin);
 
-    public void dfs();
-
-    public ArrayList<GraphVertex<V>> dijsktra(K origin, K end);
-
-    public double[][] floydWarshall();
-
-    public void prim(GraphVertex<V> r);
-
     public int size();
 
+    LinkedList<Edge<K, V>> getEdge();
 
+    ArrayList<Integer> dijkstra(K node);
 
+    ArrayList<Integer> shortestPath(K start, K end);
+
+    ArrayList<Edge<K,V>> kruskal();
+    Vertex<K,V> getVertex(K key);
 }

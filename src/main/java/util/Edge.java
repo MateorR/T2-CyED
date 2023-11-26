@@ -1,27 +1,38 @@
 package util;
 
-public class Edge <V>{
-    private GraphVertex<V> end;
-    private double weight;
+public class Edge <K extends Comparable<K>,V>{
+  private Vertex<K, V> start;
+  private Vertex<K, V> destination;
+  private int weight;
 
-    public Edge(GraphVertex<V> end, double weight){
-        this.end = end;
-        this.weight = weight;
-    }
+  public Edge(Vertex<K, V> start, Vertex<K, V> destination, int weight) {
+    this.start = start;
+    this.destination = destination;
+    this.weight = weight;
+  }
 
-    public GraphVertex<V> getEnd() {
-        return end;
-    }
+  public Vertex<K, V> getStart() {
+    return start;
+  }
 
-    public void setEnd(GraphVertex<V> end) {
-        this.end = end;
-    }
+  public void setStart(Vertex<K, V> start) {
+    this.start = start;
+  }
 
-    public double getWeight() {
-        return weight;
-    }
+  public Vertex<K, V> getDestination() {
+    return destination;
+  }
 
-    public void setWeight(double weight) {
-        this.weight = weight;
-    }
+  public void setDestination(Vertex<K, V> destination) {
+    this.destination = destination;
+  }
+
+  public int getWeight() {
+    return weight;
+  }
+
+  public void setWeight(int weight) {
+    this.weight = weight;
+  }
+
 }
